@@ -5,7 +5,7 @@ echo "Welcome To Tic Tac Toe Game"
 ROWS=3
 COLUMNS=3
 X=0
-O=1
+PLAYER=1
 
 #Declare Array
 declare -a boardOfGame
@@ -29,5 +29,14 @@ function assignedLetter() {
 	fi
 }
 
+function whoWillPlayFirst() {
+	if [ $((RANDOM%2)) -eq $PLAYER ]
+	then
+		echo "Player Play First"
+	else
+		echo "Computer Play First"
+	fi
+}
 resettingBoard
 assignedLetter
+whoWillPlayFirst
