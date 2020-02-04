@@ -7,6 +7,9 @@ COLUMNS=3
 X=0
 PLAYER=1
 
+#Variable
+counter=1
+
 #Declare Array
 declare -a boardOfGame
 
@@ -37,6 +40,31 @@ function whoWillPlayFirst() {
 		echo "Computer Play First"
 	fi
 }
+
+function displayGameBoard() {
+	for((i=1;i<=ROWS;i++))
+	do
+		echo "=================="
+		echo -n "||"
+		for((j=1;j<=COLUMNS;j++))
+		do
+			if [ boardOfGame[$i,$j] == 0 ]
+			then
+				echo " X |"
+			elif [ boardOfGame[$i,$j] == 1 ]
+			then
+				echo " O |"
+			else
+				#echo -n "   |"
+				echo -n " $counter  |"
+				((counter++))
+			fi
+		done
+		echo  "|"
+	done
+	echo "=================="
+}
 resettingBoard
 assignedLetter
 whoWillPlayFirst
+displayGameBoard
