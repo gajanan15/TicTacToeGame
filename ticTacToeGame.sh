@@ -9,7 +9,6 @@ TOTAL_MOVE=9
 
 #Variable
 count=0
-flag=0
 tieCount=0
 
 #Declare Dictionary
@@ -70,7 +69,7 @@ function playGame() {
 			echo "Player Play"
 			read -p "Enter Player Row " row
 			read -p "Enter Player Col " col
-			if [[ $row -ge $ROWS && $col -ge $COLUMNS ]]
+			if [[ $row -ge $ROWS || $col -ge $COLUMNS ]]
 			then
 				echo "Invalid"
 			elif [[ ${boardOfGame[$row,$col]} != $PLAYER_LETTER ]]
@@ -86,7 +85,14 @@ function playGame() {
 		then
 			checkFlag=0
 			echo "Computer Play"
-			computerWinningBoard $COMPUTER_LETTER $COMPUTER_LETTER
+			if [ $checkFlag -eq 0 ]
+			then
+				computerWinningBoard $COMPUTER_LETTER $COMPUTER_LETTER
+			fi
+			if [ $checkFlag -eq 0 ]
+			then
+				computerWinningBoard $PLAYER_LETTER $COMPUTER_LETTER
+			fi
 			checkForWin $COMPUTER_LETTER
 			((count++))
 			flag=0
@@ -102,7 +108,7 @@ function checkForWin() {
 	winAtDiagonal $letter
 	if [ $tieCount -gt 8 ]
 	then
-		echo "It's  a Tie"
+		echo "It's a Tie"
 		exit
 	fi
 }
@@ -127,14 +133,14 @@ function computerWinningBoard() {
 	putLetter=$2
 	checkFlag=0
 	checkFlag1=0
-	#for row win check
+
 	if [ $checkFlag1 -eq 0 ]
 	then
-		for((i=0;i<3;i++))
+		for((i=0;i<$ROWS;i++))
 		do
 			checkCount=0
 			newLetterCount=0
-			for((j=0;j<3;j++))
+			for((j=0;j<$COLUMNS;j++))
 			do
 				computerWinChecking $i $j $checkLetter
 			done
@@ -147,7 +153,6 @@ function computerWinningBoard() {
 	done
 	fi
 
-	#for col win check
 	if [ $checkFlag1 -eq 0 ]
 	then
 		for((i=0;i<3;i++))
@@ -167,14 +172,13 @@ function computerWinningBoard() {
 		done
 	fi
 
-	#for diagonal
 	if [ $checkFlag1 -eq 0 ]
 	then
 		checkCount=0
 		newLetterCount=0
-		for((i=0;i<3;i++))
+		for((i=0;i<$ROWS;i++))
 		do
-			for((j=0;j<3;j++))
+			for((j=0;j<$COLUMNS;j++))
 			do
 				if [ $i -eq $j ]
 				then
@@ -190,14 +194,13 @@ function computerWinningBoard() {
 		fi
 	fi
 
-	#diagonal right to left
 	if [ $checkFlag1 -eq 0 ]
 	then
 		checkCount=0
 		newLetterCount=0
-		for((i=0;i<3;i++))
+		for((i=0;i<$ROWS;i++))
 		do
-			for((j=$((2-$i));j<3;j++))
+			for((j=$((2-$i));j<$COLUMNS;j++))
 			do
 				computerWinChecking $i $j $checkLetter
 				break
