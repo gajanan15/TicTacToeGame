@@ -24,17 +24,17 @@ function resettingBoard() {
 	done
 }
 
-function assignedLetter() {
+function assignedSymbol() {
 	if [ $((RANDOM%2)) -eq 1 ]
 	then
-		PLAYER_LETTER=$"X"
-		COMPUTER_LETTER=$"O"
+		PLAYER_SYMBOL=$"X"
+		COMPUTER_SYMBOL=$"O"
 	else
-		PLAYER_LETTER=$"O"
-		COMPUTER_LETTER=$"X"
+		PLAYER_SYMBOL=$"O"
+		COMPUTER_SYMBOL=$"X"
 	fi
-	echo "Assigned Player Letter: " $PLAYER_LETTER
-	echo "Assigned Computer Letter: " $COMPUTER_LETTER
+	echo "Assigned Player Symbol: " $PLAYER_SYMBOL
+	echo "Assigned Computer Symbol: " $COMPUTER_SYMBOL
 }
 
 function whoWillPlayFirst() {
@@ -73,10 +73,10 @@ function playGame() {
 			if [[ $row -ge $ROWS || $col -ge $COLUMNS ]]
 			then
 				echo "Invalid"
-			elif [[ ${boardOfGame[$row,$col]} != $PLAYER_LETTER && ${boardOfGame[$row,$col]} != $COMPUTER_LETTER ]]
+			elif [[ ${boardOfGame[$row,$col]} != $PLAYER_SYMBOL && ${boardOfGame[$row,$col]} != $COMPUTER_SYMBOL ]]
 			then
-				boardOfGame[$row,$col]=$PLAYER_LETTER
-				checkForWin $PLAYER_LETTER
+				boardOfGame[$row,$col]=$PLAYER_SYMBOL
+				checkForWin $PLAYER_SYMBOL
 				((count++))
 				flag=1
 			else
@@ -88,17 +88,21 @@ function playGame() {
 			echo "Computer Play"
 			if [ $checkFlag -eq 0 ]
 			then
-				computerWinningBoard $COMPUTER_LETTER $COMPUTER_LETTER
+				computerWinningBoard $COMPUTER_SYMBOL
 			fi
 			if [ $checkFlag -eq 0 ]
 			then
-				computerWinningBoard $PLAYER_LETTER $COMPUTER_LETTER
+				computerWinningBoard $PLAYER_SYMBOL
 			fi
 			if [ $checkFlag -eq 0 ]
 			then
-				takingCornerPosition $COMPUTER_LETTER
+				takingCornerPosition
 			fi
-			checkForWin $COMPUTER_LETTER
+			if [ $checkFlag -eq 0 ]
+			then
+				takingCenterPosition
+			fi
+			checkForWin $COMPUTER_SYMBOL
 			((count++))
 			flag=0
 		fi
@@ -107,10 +111,10 @@ function playGame() {
 
 function checkForWin() {
 	((tieCount++))
-	letter=$1
+	symbol=$1
 	displayGameBoard
-	winAtRowAndColumnPosition	$letter
-	winAtDiagonalPosition $letter
+	winAtRowAndColumnPosition	$symbol
+	winAtDiagonalPosition $symbol
 	if [ $tieCount -gt 8 ]
 	then
 		echo "It's a Tie"
@@ -121,13 +125,13 @@ function checkForWin() {
 function computerWinChecking() {
 	local m=$1
 	local n=$2
-	letter=$3
-	if [[ ${boardOfGame[$m,$n]} == $letter ]]
+	symbol=$3
+	if [[ ${boardOfGame[$m,$n]} == $symbol ]]
 	then
 		((checkCount++))
 	elif [[ ${boardOfGame[$m,$n]} == $"-" ]]
 	then
-		((newLetterCount++))
+		((newSymbolCount++))
 		row=$m
 		column=$n
 	fi
@@ -135,21 +139,20 @@ function computerWinChecking() {
 
 function reassignCounter() {
 		checkCount=0
-		newLetterCount=0
+		newSymbolCount=0
 }
 
 function checkCounterAndChangeFlagValue() {
-	if [[ $checkCount -eq 2 && $newLetterCount -eq 1 ]]
+	if [[ $checkCount -eq 2 && $newSymbolCount -eq 1 ]]
 	then
-		boardOfGame[$row,$column]=$putLetter
+		boardOfGame[$row,$column]=$COMPUTER_SYMBOL
 		checkFlag1=1
 		checkFlag=1
 	fi
 }
 
 function computerWinningBoard() {
-	checkLetter=$1
-	putLetter=$2
+	checkSymbol=$1
 	checkFlag=0
 	checkFlag1=0
 
@@ -161,9 +164,9 @@ function computerWinningBoard() {
 			reassignCounter
 			for((j=0;j<COLUMNS;j++))
 			do
-				computerWinChecking $i $j $checkLetter
+				computerWinChecking $i $j $checkSymbol
 			done
-			checkCounterAndChangeFlagValue $row $column $putLetter
+			checkCounterAndChangeFlagValue $row $column
 		done
 	fi
 
@@ -175,9 +178,9 @@ function computerWinningBoard() {
 			reassignCounter
 			for((j=0;j<COLUMNS;j++))
 			do
-				computerWinChecking $j $i $checkLetter
+				computerWinChecking $j $i $checkSymbol
 			done
-			checkCounterAndChangeFlagValue $row $column $putLetter
+			checkCounterAndChangeFlagValue $row $column
 		done
 	fi
 
@@ -191,11 +194,11 @@ function computerWinningBoard() {
 			do
 				if [ $i -eq $j ]
 				then
-					computerWinChecking $i $j $checkLetter
+					computerWinChecking $i $j $checkSymbol
 				fi
 			done
 		done
-		checkCounterAndChangeFlagValue $row $column $putLetter
+		checkCounterAndChangeFlagValue $row $column
 	fi
 
 	#Computer Check 2nd Possible Winning Diagonal Position
@@ -206,24 +209,23 @@ function computerWinningBoard() {
 		do
 			for((j=$((2-$i));j<COLUMNS;j++))
 			do
-				computerWinChecking $i $j $checkLetter
+				computerWinChecking $i $j $checkSymbol
 				break
 			done
 		done
-		checkCounterAndChangeFlagValue $row $column $putLetter
+		checkCounterAndChangeFlagValue $row $column
 	fi
 }
 
 function takingCornerPosition(){
 	checkFlag=0
-	local putLetter=$1
 	for((i=0;i<ROWS;i=$(($i+2))))
 	do
 		for((j=0;j<COLUMNS;j=$(($j+2))))
 		do
 			if [[ ${boardOfGame[$i,$j]} == "-" ]]
 			then
-				boardOfGame[$i,$j]=$putLetter
+				boardOfGame[$i,$j]=$COMPUTER_SYMBOL
 				checkFlag=1
 				return
 			fi
@@ -231,9 +233,19 @@ function takingCornerPosition(){
 	done
 }
 
+function takingCenterPosition() {
+	checkFlag=0
+	if [[ ${boardOfGame[1,1]} == $"-" ]]
+	then
+		boardOfGame[1,1]=$COMPUTER_SYMBOL
+	else
+		checkFlag=1
+	fi
+}
+
 function playerOrComputerWon() {
-	local letter=$1
-	if [[ $letter == $PLAYER_LETTER ]]
+	local symbol=$1
+	if [[ $symbol == $PLAYER_SYMBOL ]]
 	then
 		echo "Player Won"
 	else
@@ -243,35 +255,35 @@ function playerOrComputerWon() {
 }
 
 function winAtRowAndColumnPosition() {
-	letter=$1
+	symbol=$1
 	for((r=0;r<ROWS;r++))
 	do
 		for((c=0;c<COLUMNS;c++))
 		do
-			if [[ ${boardOfGame[$r,$c]} == ${boardOfGame[$r,$(($c+1))]} ]] && [[ ${boardOfGame[$r,$(($c+1))]} == ${boardOfGame[$r,$(($c+2))]} ]] && [[ ${boardOfGame[$r,$c]} == $letter ]]
+			if [[ ${boardOfGame[$r,$c]} == ${boardOfGame[$r,$(($c+1))]} ]] && [[ ${boardOfGame[$r,$(($c+1))]} == ${boardOfGame[$r,$(($c+2))]} ]] && [[ ${boardOfGame[$r,$c]} == $symbol ]]
 			then
-				playerOrComputerWon $letter
-			elif [[ ${boardOfGame[$r,$c]} == ${boardOfGame[$(($r+1)),$c]} ]] && [[ ${boardOfGame[$(($r+1)),$c]} == ${boardOfGame[$(($r+2)),$c]} ]] && [[ ${boardOfGame[$r,$c]} == $letter ]]
+				playerOrComputerWon $symbol
+			elif [[ ${boardOfGame[$r,$c]} == ${boardOfGame[$(($r+1)),$c]} ]] && [[ ${boardOfGame[$(($r+1)),$c]} == ${boardOfGame[$(($r+2)),$c]} ]] && [[ ${boardOfGame[$r,$c]} == $symbol ]]
 			then
-				playerOrComputerWon $letter
+				playerOrComputerWon $symbol
 			fi
 		done
 	done
 }
 
 function	winAtDiagonalPosition() {
-	letter=$1
-	if [[ ${boardOfGame[0,0]} == ${boardOfGame[1,1]} ]] && [[ ${boardOfGame[1,1]} == ${boardOfGame[2,2]} ]] && [[ ${boardOfGame[0,0]} == $letter ]]
+	symbol=$1
+	if [[ ${boardOfGame[0,0]} == ${boardOfGame[1,1]} ]] && [[ ${boardOfGame[1,1]} == ${boardOfGame[2,2]} ]] && [[ ${boardOfGame[0,0]} == $symbol ]]
 	then
-		playerOrComputerWon $letter
-	elif [[ ${boardOfGame[0,2]} == ${boardOfGame[1,1]} ]] && [[ ${boardOfGame[1,1]} == ${boardOfGame[2,0]} ]] && [[ ${boardOfGame[0,2]} == $letter ]]
+		playerOrComputerWon $symbol
+	elif [[ ${boardOfGame[0,2]} == ${boardOfGame[1,1]} ]] && [[ ${boardOfGame[1,1]} == ${boardOfGame[2,0]} ]] && [[ ${boardOfGame[0,2]} == $symbol ]]
 	then
-		playerOrComputerWon $letter
+		playerOrComputerWon $symbol
 	fi
 }
 
 resettingBoard
-assignedLetter
+assignedSymbol
 whoWillPlayFirst
 displayGameBoard
 playGame
