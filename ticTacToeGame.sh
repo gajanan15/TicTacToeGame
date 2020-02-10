@@ -5,7 +5,6 @@ echo "Welcome To Tic Tac Toe Game"
 ROWS=3
 COLUMNS=3
 PLAYER=0
-TOTAL_MOVE=9
 
 #Variable
 count=0
@@ -27,11 +26,11 @@ function resettingBoard() {
 function assignedSymbol() {
 	if [ $((RANDOM%2)) -eq 1 ]
 	then
-		PLAYER_SYMBOL=$"X"
-		COMPUTER_SYMBOL=$"O"
+		PLAYER_SYMBOL="X"
+		COMPUTER_SYMBOL="O"
 	else
-		PLAYER_SYMBOL=$"O"
-		COMPUTER_SYMBOL=$"X"
+		PLAYER_SYMBOL="O"
+		COMPUTER_SYMBOL="X"
 	fi
 	echo "Assigned Player Symbol: " $PLAYER_SYMBOL
 	echo "Assigned Computer Symbol: " $COMPUTER_SYMBOL
@@ -63,19 +62,19 @@ function displayGameBoard() {
 
 #Game Start
 function playGame() {
-	while [[ $count -lt $TOTAL_MOVE ]]
+	while [[ $count -lt $(($ROWS*$COLUMNS)) ]]
 	do
 		if [ $flag == 0 ]
 		then
 			echo "Player Play"
 			read -p "Enter Player Row " row
-			read -p "Enter Player Col " col
-			if [[ $row -ge $ROWS || $col -ge $COLUMNS ]]
+			read -p "Enter Player Col " column
+			if [[ $row -ge $ROWS || $column -ge $COLUMNS ]]
 			then
 				echo "Invalid"
-			elif [[ ${boardOfGame[$row,$col]} != $PLAYER_SYMBOL && ${boardOfGame[$row,$col]} != $COMPUTER_SYMBOL ]]
+			elif [[ ${boardOfGame[$row,$column]} != $PLAYER_SYMBOL && ${boardOfGame[$row,$column]} != $COMPUTER_SYMBOL ]]
 			then
-				boardOfGame[$row,$col]=$PLAYER_SYMBOL
+				boardOfGame[$row,$column]=$PLAYER_SYMBOL
 				checkForWin $PLAYER_SYMBOL
 				((count++))
 				flag=1
@@ -102,6 +101,10 @@ function playGame() {
 			then
 				takingCenterPosition
 			fi
+			if [ $checkFlag -eq 0 ]
+			then
+				takingSidePosition
+			fi
 			checkForWin $COMPUTER_SYMBOL
 			((count++))
 			flag=0
@@ -113,7 +116,7 @@ function checkForWin() {
 	((tieCount++))
 	symbol=$1
 	displayGameBoard
-	winAtRowAndColumnPosition	$symbol
+	winAtRowAndColumnPosition $symbol
 	winAtDiagonalPosition $symbol
 	if [ $tieCount -gt 8 ]
 	then
@@ -129,7 +132,8 @@ function computerWinChecking() {
 	if [[ ${boardOfGame[$m,$n]} == $symbol ]]
 	then
 		((checkCount++))
-	elif [[ ${boardOfGame[$m,$n]} == $"-" ]]
+	fi
+	if [[ ${boardOfGame[$m,$n]} == "-" ]]
 	then
 		((newSymbolCount++))
 		row=$m
@@ -137,54 +141,60 @@ function computerWinChecking() {
 	fi
 }
 
+#reset Counter
 function reassignCounter() {
 		checkCount=0
 		newSymbolCount=0
 }
 
+#check Counter and Change falg value
 function checkCounterAndChangeFlagValue() {
+	local rowValue=$1
+	local columnValue=$2
 	if [[ $checkCount -eq 2 && $newSymbolCount -eq 1 ]]
 	then
-		boardOfGame[$row,$column]=$COMPUTER_SYMBOL
+		boardOfGame[$rowValue,$columnValue]=$COMPUTER_SYMBOL
 		checkFlag1=1
 		checkFlag=1
+		checkColumnFlag=0
 	fi
 }
 
+function winAndBlockRowAndColumn() {
+	for((i=0;i<ROWS;i++))
+	do
+		reassignCounter
+		for((j=0;j<COLUMNS;j++))
+		do
+			if [ $checkColumnFlag -eq 1 ]
+			then
+				computerWinChecking $j $i $checkSymbol
+			else
+				computerWinChecking $i $j $checkSymbol
+			fi
+		done
+		checkCounterAndChangeFlagValue $row $column
+	done
+}
+
+#Check All 24 Cases
 function computerWinningBoard() {
 	checkSymbol=$1
+	checkColumnFlag=0
 	checkFlag=0
 	checkFlag1=0
-
-	#Computer Checks All 3 Possible Winning Row Position
 	if [ $checkFlag1 -eq 0 ]
 	then
-		for((i=0;i<ROWS;i++))
-		do
-			reassignCounter
-			for((j=0;j<COLUMNS;j++))
-			do
-				computerWinChecking $i $j $checkSymbol
-			done
-			checkCounterAndChangeFlagValue $row $column
-		done
+		checkColumnFlag=0
+		winAndBlockRowAndColumn
 	fi
 
-	#Computer Checks All 3 Possible Winning Columns Position
 	if [ $checkFlag1 -eq 0 ]
 	then
-		for((i=0;i<ROWS;i++))
-		do
-			reassignCounter
-			for((j=0;j<COLUMNS;j++))
-			do
-				computerWinChecking $j $i $checkSymbol
-			done
-			checkCounterAndChangeFlagValue $row $column
-		done
+		checkColumnFlag=1
+		winAndBlockRowAndColumn
 	fi
 
-	#Computer Check 1 Possible Winning Diagonal Position
 	if [ $checkFlag1 -eq 0 ]
 	then
 		reassignCounter
@@ -201,7 +211,6 @@ function computerWinningBoard() {
 		checkCounterAndChangeFlagValue $row $column
 	fi
 
-	#Computer Check 2nd Possible Winning Diagonal Position
 	if [ $checkFlag1 -eq 0 ]
 	then
 		reassignCounter
@@ -217,8 +226,8 @@ function computerWinningBoard() {
 	fi
 }
 
+#Check Corner Position
 function takingCornerPosition(){
-	checkFlag=0
 	for((i=0;i<ROWS;i=$(($i+2))))
 	do
 		for((j=0;j<COLUMNS;j=$(($j+2))))
@@ -233,16 +242,35 @@ function takingCornerPosition(){
 	done
 }
 
+#Check Center Position
 function takingCenterPosition() {
-	checkFlag=0
-	if [[ ${boardOfGame[1,1]} == $"-" ]]
+	if [[ ${boardOfGame[1,1]} == "-" ]]
 	then
 		boardOfGame[1,1]=$COMPUTER_SYMBOL
-	else
 		checkFlag=1
 	fi
 }
 
+#check Side Position
+function takingSidePosition() {
+	for((i=0;i<ROWS;i++))
+	do
+		for((j=1;j<COLUMNS;j++))
+		do
+			if [ ${boardOfGame[$i,$j]} == "-" ]
+			then
+				boardOfGame[$i,$j]=$COMPUTER_SYMBOL
+				checkFlag=1
+			fi
+		done
+		if [ $checkFlag -eq 1 ]
+		then
+			break
+		fi
+	done
+}
+
+#check Player Or Computer Won
 function playerOrComputerWon() {
 	local symbol=$1
 	if [[ $symbol == $PLAYER_SYMBOL ]]
@@ -254,6 +282,7 @@ function playerOrComputerWon() {
 	exit
 }
 
+#check Winning condtion of row and column
 function winAtRowAndColumnPosition() {
 	symbol=$1
 	for((r=0;r<ROWS;r++))
@@ -271,6 +300,7 @@ function winAtRowAndColumnPosition() {
 	done
 }
 
+#check Winning Condition Of Diagonal
 function	winAtDiagonalPosition() {
 	symbol=$1
 	if [[ ${boardOfGame[0,0]} == ${boardOfGame[1,1]} ]] && [[ ${boardOfGame[1,1]} == ${boardOfGame[2,2]} ]] && [[ ${boardOfGame[0,0]} == $symbol ]]
