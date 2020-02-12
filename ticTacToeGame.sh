@@ -5,6 +5,7 @@ echo "Welcome To Tic Tac Toe Game"
 ROWS=3
 COLUMNS=3
 PLAYER=0
+TOTAL_MOVE=$(($ROWS*$COLUMNS))
 
 #Variable
 count=0
@@ -62,7 +63,7 @@ function displayGameBoard() {
 
 #Game Start
 function playGame() {
-	while [[ $count -lt $(($ROWS*$COLUMNS)) ]]
+	while [[ $count -lt $TOTAL_MOVE ]]
 	do
 		if [ $flag == 0 ]
 		then
